@@ -30,14 +30,26 @@ function now() {
 function addMessage(target, who, text, outgoing = false, delivery = '') {
   const row = document.createElement('article');
   row.className = `message ${outgoing ? 'self' : ''}`;
-  row.innerHTML = `
-    <span class="avatar">${who[0]}</span>
-    <div class="bubble">
-      <strong>${who}</strong><br />
-      ${text}
-      <span class="meta">${now()} ${delivery}</span>
-    </div>
-  `;
+  const avatar = document.createElement('span');
+  avatar.className = 'avatar';
+  avatar.textContent = who[0] ?? '?';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+
+  const label = document.createElement('strong');
+  label.textContent = who;
+  bubble.appendChild(label);
+  bubble.appendChild(document.createElement('br'));
+  bubble.appendChild(document.createTextNode(text));
+
+  const meta = document.createElement('span');
+  meta.className = 'meta';
+  meta.textContent = `${now()} ${delivery}`.trim();
+  bubble.appendChild(meta);
+
+  row.appendChild(avatar);
+  row.appendChild(bubble);
   target.appendChild(row);
   target.scrollTop = target.scrollHeight;
 }
@@ -65,7 +77,7 @@ aiForm.addEventListener('submit', (event) => {
     addMessage(
       aiHistory,
       'AI',
-      `I received your doubt: "${question}". Connect this UI with your backend WebSocket/AI API for real-time answers across devices.`
+      `I received your question: "${question}". Connect this UI with your backend WebSocket/AI API for real-time answers across devices.`
     );
   }, 1200);
 });
@@ -128,6 +140,6 @@ videoBtn.addEventListener('click', () => {
   videoBtn.textContent = videoOff ? 'Video On' : 'Video Off';
 });
 
-addMessage(aiHistory, 'AI', 'Hi! Ask your doubt and I will respond in real time.');
+addMessage(aiHistory, 'AI', 'Hi! Ask your question and I will respond in real time.');
 addMessage(friendHistory, 'Friend', 'Hey! Ready for a quick chat?', false, '• delivered');
 setCallButtons(false);
