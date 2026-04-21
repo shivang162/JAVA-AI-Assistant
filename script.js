@@ -23,7 +23,7 @@ let callTimerId = null;
 let muted = false;
 let videoOff = false;
 
-function now() {
+function getCurrentTimeString() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -45,7 +45,7 @@ function addMessage(target, who, text, outgoing = false, delivery = '') {
 
   const meta = document.createElement('span');
   meta.className = 'meta';
-  meta.textContent = `${now()} ${delivery}`.trim();
+  meta.textContent = `${getCurrentTimeString()} ${delivery}`.trim();
   bubble.appendChild(meta);
 
   row.appendChild(avatar);
