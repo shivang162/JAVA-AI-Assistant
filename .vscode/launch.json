@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run Java AI Assistant",
+            "request": "launch",
+            "mainClass": "com.javaai.assistant.Main",
+            "projectName": "java-ai-assistant",
+            "env": {
+                "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+            },
+            "console": "internalConsole",
+            "vmArgs": ""
+        },
+        {
+            "type": "java",
+            "name": "Debug Java AI Assistant",
+            "request": "launch",
+            "mainClass": "com.javaai.assistant.Main",
+            "projectName": "java-ai-assistant",
+            "env": {
+                "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+            },
+            "console": "internalConsole",
+            "vmArgs": "-ea"
+        },
+        {
+            "type": "java",
+            "name": "Run from JAR",
+            "request": "launch",
+            "mainClass": "com.javaai.assistant.Main",
+            "classPaths": ["${workspaceFolder}/target/java-ai-assistant.jar"],
+            "env": {
+                "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+            },
+            "console": "internalConsole"
+        }
+    ]
+}
