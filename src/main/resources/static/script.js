@@ -233,6 +233,7 @@ function resetCallState() {
 startCall.addEventListener('click', async () => {
   if (startCall.disabled) return;
   startCall.disabled = true;
+  let callStarted = false;
   try {
     muted = false;
     videoOff = false;
@@ -249,13 +250,14 @@ startCall.addEventListener('click', async () => {
     callTimer.textContent = '00:00';
     clearInterval(callTimerId);
     callTimerId = setInterval(updateCallTimer, 1000);
+    callStarted = true;
   } catch (error) {
     endVideoCall();
     resetCallState();
     callStatus.textContent = 'Camera Error';
     callSync.textContent = error.message || 'Unable to access camera/microphone.';
   } finally {
-    setCallButtons(Boolean(localStream));
+    setCallButtons(callStarted);
   }
 });
 
