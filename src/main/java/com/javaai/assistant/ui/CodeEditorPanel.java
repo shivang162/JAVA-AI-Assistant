@@ -145,14 +145,14 @@ public class CodeEditorPanel extends JPanel {
         JButton clearBtn   = createButton("✕  Clear",   BTN_CLEAR_BG,   "Clear the editor");
         JButton askAiBtn   = createButton("🤖  Ask AI", BTN_ASK_BG,    "Send selected (or all) code to the AI assistant");
 
-        compileBtn.setMnemonic('C');
+        // Ctrl+B fires the same "compile" action; the button's own ActionListener
+        // is NOT added separately to avoid double-compilation on button click.
         compileBtn.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                   .put(KeyStroke.getKeyStroke("control B"), "compile");
         compileBtn.getActionMap().put("compile", new AbstractAction() {
             @Override public void actionPerformed(java.awt.event.ActionEvent e) { doCompile(); }
         });
-
-        compileBtn.addActionListener(e -> doCompile());
+        compileBtn.addActionListener(compileBtn.getActionMap().get("compile"));
         clearBtn  .addActionListener(e -> doClear());
         askAiBtn  .addActionListener(e -> doAskAi());
 

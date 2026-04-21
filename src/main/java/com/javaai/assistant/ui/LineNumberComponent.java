@@ -3,6 +3,7 @@ package com.javaai.assistant.ui;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 /**
  * A lightweight component that paints line numbers alongside a {@link JTextPane}.
@@ -57,11 +58,11 @@ public class LineNumberComponent extends JComponent {
         for (int line = 0; line < root.getElementCount(); line++) {
             Element elem = root.getElement(line);
             try {
-                Rectangle r = textPane.modelToView(elem.getStartOffset());
+                Rectangle2D r = textPane.modelToView2D(elem.getStartOffset());
                 if (r != null) {
                     String num = String.valueOf(line + 1);
                     int xPos = getWidth() - fm.stringWidth(num) - PADDING;
-                    int yPos = r.y + fm.getAscent();
+                    int yPos = (int) r.getY() + fm.getAscent();
                     g2.drawString(num, xPos, yPos);
                 }
             } catch (BadLocationException ignored) { }

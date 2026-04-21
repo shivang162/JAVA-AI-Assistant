@@ -4,6 +4,7 @@ import javax.tools.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -73,8 +74,8 @@ public class JavaCompilerService {
                         diagnosticsWriter,
                         fileManager,
                         diagnostics,
-                        Collections.singletonList("-d"),   // flag
-                        Collections.singletonList(tempDir.toString()), // output dir
+                        Arrays.asList("-d", tempDir.toString()), // compiler options: output dir
+                        null,
                         compilationUnits
                 );
 
