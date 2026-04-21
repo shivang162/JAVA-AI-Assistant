@@ -1,0 +1,10 @@
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/Main.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/ai/AIAssistantService.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/ai/ChatMessage.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/compiler/CompilationResult.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/compiler/JavaCompilerService.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/editor/JavaSyntaxHighlighter.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/ui/ChatPanel.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/ui/CodeEditorPanel.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/ui/LineNumberComponent.java
+/home/runner/work/JAVA-AI-Assistant/JAVA-AI-Assistant/src/main/java/com/javaai/assistant/ui/MainFrame.java
