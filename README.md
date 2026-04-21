@@ -56,19 +56,18 @@ ai.contextWindow=20
 
 ## Example Usage
 
-```text
-Java AI Assistant started. Type /help for commands.
-You> hello
-AI> Hello! I'm your Java AI Assistant. How can I help today?
-You> I get a compile error in my Java class
-AI> I can help debug that Java issue. Share the relevant snippet and expected behavior.
-You> /history
-AI> user: hello
-assistant: Hello! I'm your Java AI Assistant. How can I help today?
-user: I get a compile error in my Java class
-assistant: I can help debug that Java issue. Share the relevant snippet and expected behavior.
-You> /exit
-AI> Goodbye.
+```bash
+# open UI
+http://localhost:8080
+
+# REST examples
+curl -X POST http://localhost:8080/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"hello"}'
+
+curl -X POST http://localhost:8080/api/command \
+  -H "Content-Type: application/json" \
+  -d '{"command":"/help"}'
 ```
 
 ## Testing
