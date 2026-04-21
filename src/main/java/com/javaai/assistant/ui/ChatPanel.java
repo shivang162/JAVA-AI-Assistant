@@ -51,6 +51,8 @@ public class ChatPanel extends JPanel {
     private Style metaStyle;
     private Style codeStyle;
     private Style normalStyle;
+    private JScrollPane historyScroll;
+    private JScrollPane inputScroll;
 
     // -----------------------------------------------------------------------
     public ChatPanel(AIAssistantService aiService) {
@@ -76,7 +78,7 @@ public class ChatPanel extends JPanel {
         historyPane.setMargin(new Insets(6, 6, 6, 6));
         initStyles();
 
-        JScrollPane historyScroll = new JScrollPane(historyPane);
+        historyScroll = new JScrollPane(historyPane);
         historyScroll.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
         historyScroll.getViewport().setBackground(HISTORY_BG);
         add(historyScroll, BorderLayout.CENTER);
@@ -137,7 +139,7 @@ public class ChatPanel extends JPanel {
             }
         });
 
-        JScrollPane inputScroll = new JScrollPane(inputArea);
+        inputScroll = new JScrollPane(inputArea);
         inputScroll.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
         panel.add(inputScroll, BorderLayout.CENTER);
 
@@ -322,5 +324,30 @@ public class ChatPanel extends JPanel {
                 BorderFactory.createLineBorder(bg.darker(), 1),
                 BorderFactory.createEmptyBorder(4, 12, 4, 12)));
         return btn;
+    }
+
+    /** Applies light or dark palette to the panel at runtime. */
+    public void applyTheme(boolean dark) {
+        Color panelBg = dark ? PANEL_BG : new Color(243, 243, 243);
+        Color headerBg = dark ? HEADER_BG : new Color(232, 232, 232);
+        Color historyBg = dark ? HISTORY_BG : Color.WHITE;
+        Color inputBg = dark ? INPUT_BG : Color.WHITE;
+        Color textColor = dark ? TEXT_COLOR : new Color(33, 33, 33);
+        Color border = dark ? BORDER_COLOR : new Color(204, 204, 204);
+
+        setBackground(panelBg);
+        Component header = getComponent(0);
+        if (header instanceof JComponent jc) {
+            jc.setBackground(headerBg);
+            jc.setForeground(textColor);
+        }
+        historyPane.setBackground(historyBg);
+        historyPane.setForeground(textColor);
+        inputArea.setBackground(inputBg);
+        inputArea.setForeground(textColor);
+        inputArea.setCaretColor(dark ? Color.WHITE : Color.BLACK);
+        historyScroll.setBorder(BorderFactory.createLineBorder(border));
+        inputScroll.setBorder(BorderFactory.createLineBorder(border));
+        repaint();
     }
 }

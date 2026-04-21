@@ -5,7 +5,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +26,8 @@ public class JavaCompilerService {
     /** Regex that extracts the first public type name from Java source. */
     private static final Pattern CLASS_NAME_PATTERN =
             Pattern.compile("\\bpublic\\s+(?:class|interface|enum|record|@interface)\\s+(\\w+)");
+    private static final long EXECUTION_TIMEOUT_SECONDS = 15;
+    private static final String EXECUTION_TIMEOUT_UNIT = "seconds";
 
     /**
      * Compiles {@code sourceCode} and returns a {@link CompilationResult}.
@@ -34,6 +36,28 @@ public class JavaCompilerService {
      * @return compilation result with success flag and human-readable output
      */
     public CompilationResult compile(String sourceCode) {
+        return compileInternal(sourceCode, null, null, false);
+    }
+
+    /**
+     * Compiles and runs Java source code. The source must contain a
+     * {@code public static void main(String[] args)} entry-point.
+     */
+    public CompilationResult compileAndRun(String sourceCode, String args, String stdIn) {
+        return compileInternal(sourceCode, args, stdIn, true);
+    }
+
+    /** Returns a short JDK diagnostic string used by the IDE status output. */
+    public String getJdkInfo() {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        if (compiler == null) {
+            return "JDK not detected (JavaCompiler unavailable).";
+        }
+        return "JDK detected: " + System.getProperty("java.version") +
+                " (" + System.getProperty("java.home") + ")";
+    }
+
+    private CompilationResult compileInternal(String sourceCode, String args, String stdIn, boolean runAfterCompile) {
         if (sourceCode == null || sourceCode.isBlank()) {
             return new CompilationResult(false, "No source code to compile.");
         }
@@ -83,7 +107,11 @@ public class JavaCompilerService {
 
                 // ---- Format diagnostics output ------------------------------
                 StringBuilder sb = new StringBuilder();
+                Integer firstErrorLine = null;
                 for (Diagnostic<? extends JavaFileObject> d : diagnostics.getDiagnostics()) {
+                    if (firstErrorLine == null && d.getKind() == Diagnostic.Kind.ERROR && d.getLineNumber() > 0) {
+                        firstErrorLine = (int) d.getLineNumber();
+                    }
                     sb.append(formatDiagnostic(d)).append('\n');
                 }
                 if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '\n') {
@@ -91,14 +119,24 @@ public class JavaCompilerService {
                 }
 
                 if (success && sb.length() == 0) {
+                    if (runAfterCompile) {
+                        return runClass(tempDir, className, args, stdIn);
+                    }
                     return new CompilationResult(true,
-                            "✔ Compilation successful – class: " + className);
+                            "✔ Compilation successful – class: " + className, null);
                 } else if (success) {
+                    if (runAfterCompile) {
+                        CompilationResult runResult = runClass(tempDir, className, args, stdIn);
+                        return new CompilationResult(runResult.isSuccess(),
+                                "✔ Compilation successful (with warnings)\n\n" + sb +
+                                        "\n\n----- Program Output -----\n" + runResult.getOutput(),
+                                null);
+                    }
                     return new CompilationResult(true,
-                            "✔ Compilation successful (with warnings)\n\n" + sb);
+                            "✔ Compilation successful (with warnings)\n\n" + sb, null);
                 } else {
                     return new CompilationResult(false,
-                            "✘ Compilation failed\n\n" + sb);
+                            "✘ Compilation failed\n\n" + sb, firstErrorLine);
                 }
             }
 
@@ -109,6 +147,53 @@ public class JavaCompilerService {
             if (tempDir != null) {
                 deleteDirectory(tempDir.toFile());
             }
+        }
+    }
+
+    private CompilationResult runClass(Path classOutputDir, String className, String args, String stdIn) {
+        try {
+            List<String> command = new java.util.ArrayList<>();
+            command.add("java");
+            command.add("-cp");
+            command.add(classOutputDir.toString());
+            command.add(className);
+            if (args != null && !args.isBlank()) {
+                command.addAll(Arrays.stream(args.trim().split("\\s+")).toList());
+            }
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            if (stdIn != null && !stdIn.isEmpty()) {
+                try (OutputStream os = process.getOutputStream()) {
+                    os.write(stdIn.getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                }
+            } else {
+                process.getOutputStream().close();
+            }
+
+            String output;
+            try (InputStream is = process.getInputStream()) {
+                output = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            }
+
+            boolean finished = process.waitFor(EXECUTION_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                return new CompilationResult(false, "Program timed out after " + EXECUTION_TIMEOUT_SECONDS + " " + EXECUTION_TIMEOUT_UNIT + ".");
+            }
+
+            int code = process.exitValue();
+            if (code == 0) {
+                return new CompilationResult(true,
+                        output.isBlank() ? "(Program finished with no output)" : output);
+            }
+            return new CompilationResult(false,
+                    "Program exited with code " + code + "\n\n" +
+                            (output.isBlank() ? "(No output)" : output));
+        } catch (Exception e) {
+            return new CompilationResult(false, "Error while running program: " + e.getMessage());
         }
     }
 
