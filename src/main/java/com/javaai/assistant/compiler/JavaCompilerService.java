@@ -26,6 +26,8 @@ public class JavaCompilerService {
     /** Regex that extracts the first public type name from Java source. */
     private static final Pattern CLASS_NAME_PATTERN =
             Pattern.compile("\\bpublic\\s+(?:class|interface|enum|record|@interface)\\s+(\\w+)");
+    private static final long EXECUTION_TIMEOUT_SECONDS = 15;
+    private static final String EXECUTION_TIMEOUT_UNIT = "seconds";
 
     /**
      * Compiles {@code sourceCode} and returns a {@link CompilationResult}.
@@ -176,10 +178,10 @@ public class JavaCompilerService {
                 output = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             }
 
-            boolean finished = process.waitFor(15, java.util.concurrent.TimeUnit.SECONDS);
+            boolean finished = process.waitFor(EXECUTION_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
             if (!finished) {
                 process.destroyForcibly();
-                return new CompilationResult(false, "Program timed out after 15 seconds.");
+                return new CompilationResult(false, "Program timed out after " + EXECUTION_TIMEOUT_SECONDS + " " + EXECUTION_TIMEOUT_UNIT + ".");
             }
 
             int code = process.exitValue();

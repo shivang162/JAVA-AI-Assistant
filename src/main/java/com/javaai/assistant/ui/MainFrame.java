@@ -182,7 +182,7 @@ public class MainFrame extends JFrame {
             showOutputMessage(key.isBlank() ? "API key cleared." : "✔ API key set.", META_COLOR);
         });
 
-        JButton clearChatBtn = smallButton("Clear AI", new Color(80, 50, 50));
+        JButton clearChatBtn = smallButton("Clear AI Chat", new Color(80, 50, 50));
         clearChatBtn.addActionListener(e -> aiService.clearHistory());
 
         keyPanel.add(keyLabel);
@@ -231,7 +231,7 @@ public class MainFrame extends JFrame {
         outputContainer = new JPanel(new BorderLayout());
 
         JPanel outputHeader = new JPanel(new BorderLayout());
-        JLabel outputTitle = new JLabel("  �� Terminal / Compiler Output");
+        JLabel outputTitle = new JLabel(" 🔨 Terminal / Compiler Output");
         outputTitle.setFont(new Font("SansSerif", Font.BOLD, 12));
         outputTitle.setBorder(BorderFactory.createEmptyBorder(3, 4, 3, 4));
         outputHeader.add(outputTitle, BorderLayout.WEST);

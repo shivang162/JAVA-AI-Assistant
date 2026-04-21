@@ -13,4 +13,6 @@ com/javaai/assistant/ui/LineNumberComponent.class
 com/javaai/assistant/compiler/JavaCompilerService.class
 com/javaai/assistant/ui/MainFrame.class
 com/javaai/assistant/compiler/JavaCompilerService$1.class
+com/javaai/assistant/ui/CodeEditorPanel$3.class
+com/javaai/assistant/ui/CodeEditorPanel$EditorTab.class
 com/javaai/assistant/ui/CodeEditorPanel.class

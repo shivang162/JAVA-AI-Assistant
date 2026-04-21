@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /** Java-only editor with tabs, find/replace, autosave and compile/run actions. */
 public class CodeEditorPanel extends JPanel {
@@ -39,6 +40,7 @@ public class CodeEditorPanel extends JPanel {
     private static final Color EDITOR_BG_LIGHT = new Color(250, 250, 250);
     private static final Color PANEL_BG_LIGHT = new Color(242, 242, 242);
     private static final Color BORDER_COLOR_LIGHT = new Color(204, 204, 204);
+    private static final int AUTO_SAVE_INTERVAL_MS = 10_000;
 
     private final JavaCompilerService compilerService = new JavaCompilerService();
     private final List<EditorTab> tabs = new ArrayList<>();
@@ -61,7 +63,7 @@ public class CodeEditorPanel extends JPanel {
         newTab("Main.java", STARTER_CODE, null);
         applyTheme(true);
 
-        autoSaveTimer = new Timer(10000, e -> autoSave());
+        autoSaveTimer = new Timer(AUTO_SAVE_INTERVAL_MS, e -> autoSave());
         autoSaveTimer.start();
     }
 
@@ -175,12 +177,20 @@ public class CodeEditorPanel extends JPanel {
 
         String text = tab.textPane.getText();
         String updated;
-        if (regexBox.isSelected()) {
-            updated = Pattern.compile(find).matcher(text).replaceAll(Matcher.quoteReplacement(replace));
-        } else {
-            updated = text.replace(find, replace);
+        try {
+            if (regexBox.isSelected()) {
+                Pattern compiledPattern = Pattern.compile(find);
+                updated = compiledPattern.matcher(text).replaceAll(Matcher.quoteReplacement(replace));
+            } else {
+                updated = text.replace(find, replace);
+            }
+            tab.textPane.setText(updated);
+        } catch (PatternSyntaxException ex) {
+            JOptionPane.showMessageDialog(parent,
+                    "Invalid regex pattern:\n" + ex.getDescription(),
+                    "Find & Replace",
+                    JOptionPane.ERROR_MESSAGE);
         }
-        tab.textPane.setText(updated);
     }
 
     public Integer highlightErrorLine(Integer lineNumber) {
@@ -298,7 +308,8 @@ public class CodeEditorPanel extends JPanel {
                     Files.writeString(tab.file.toPath(), tab.textPane.getText(), StandardCharsets.UTF_8);
                     tab.dirty = false;
                     refreshTabTitle(tab);
-                } catch (Exception ignored) {
+                } catch (Exception ex) {
+                    System.err.println("Autosave failed for " + tab.file + ": " + ex.getMessage());
                 }
             }
         }
