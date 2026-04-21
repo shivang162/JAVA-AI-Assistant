@@ -4,34 +4,67 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.javaai</groupId>
-    <artifactId>java-ai-assistant</artifactId>
-    <version>1.0.0</version>
+    <groupId>com.aiassistant</groupId>
+    <artifactId>ai-assistant</artifactId>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
-    <name>Java AI Assistant</name>
-    <description>A Java Swing IDE with integrated AI chat assistant – Java-only compilation and AI guidance.</description>
+    <name>AI Assistant</name>
+    <description>Production-ready Java AI Assistant with NLP, context management and command processing.</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.jupiter.version>5.10.2</junit.jupiter.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.javaai.assistant.Main</mainClass>
+                            <mainClass>com.aiassistant.Main</mainClass>
                         </manifest>
                     </archive>
-                    <finalName>java-ai-assistant</finalName>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <finalName>ai-assistant-1.0</finalName>
+                    <appendAssemblyId>true</appendAssemblyId>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
