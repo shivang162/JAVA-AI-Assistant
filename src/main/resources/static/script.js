@@ -16,12 +16,19 @@ const muteBtn = document.getElementById('mute-btn');
 const videoBtn = document.getElementById('video-btn');
 const callStatus = document.getElementById('call-status');
 const callTimer = document.getElementById('call-timer');
+const callSync = document.getElementById('call-sync');
+const localOnline = document.getElementById('local-online');
 const remoteOnline = document.getElementById('remote-online');
+const localVideo = document.getElementById('local-video');
+const remoteVideo = document.getElementById('remote-video');
 
 let callSeconds = 0;
 let callTimerId = null;
 let muted = false;
 let videoOff = false;
+let localStream = null;
+let localPeerConnection = null;
+let remotePeerConnection = null;
 
 async function postJson(url, payload) {
   const response = await fetch(url, {
@@ -125,41 +132,154 @@ function setCallButtons(inCall) {
   videoBtn.disabled = !inCall;
 }
 
-startCall.addEventListener('click', () => {
-  setCallButtons(true);
-  callStatus.textContent = 'In Call';
-  callStatus.className = 'status-pill busy';
-  remoteOnline.textContent = 'Connected';
+function stopStreamTracks(stream) {
+  if (!stream) return;
+  stream.getTracks().forEach((track) => track.stop());
+}
+
+function closePeerConnections() {
+  if (localPeerConnection) {
+    localPeerConnection.close();
+    localPeerConnection = null;
+  }
+  if (remotePeerConnection) {
+    remotePeerConnection.close();
+    remotePeerConnection = null;
+  }
+  remoteVideo.srcObject = null;
+}
+
+function applyTrackStates() {
+  if (!localStream) return;
+  localStream.getAudioTracks().forEach((track) => {
+    track.enabled = !muted;
+  });
+  localStream.getVideoTracks().forEach((track) => {
+    track.enabled = !videoOff;
+  });
+}
+
+async function setupPeerConnection() {
+  closePeerConnections();
+  localPeerConnection = new RTCPeerConnection();
+  remotePeerConnection = new RTCPeerConnection();
+
+  localPeerConnection.onicecandidate = (event) => {
+    if (event.candidate && remotePeerConnection) {
+      remotePeerConnection.addIceCandidate(event.candidate).catch(console.error);
+    }
+  };
+
+  remotePeerConnection.onicecandidate = (event) => {
+    if (event.candidate && localPeerConnection) {
+      localPeerConnection.addIceCandidate(event.candidate).catch(console.error);
+    }
+  };
+
+  remotePeerConnection.ontrack = (event) => {
+    const [stream] = event.streams;
+    if (stream) {
+      remoteVideo.srcObject = stream;
+    }
+  };
+
+  localStream.getTracks().forEach((track) => {
+    localPeerConnection.addTrack(track, localStream);
+  });
+
+  const offer = await localPeerConnection.createOffer();
+  await localPeerConnection.setLocalDescription(offer);
+  await remotePeerConnection.setRemoteDescription(offer);
+  const answer = await remotePeerConnection.createAnswer();
+  await remotePeerConnection.setLocalDescription(answer);
+  await localPeerConnection.setRemoteDescription(answer);
+}
+
+async function startVideoCall() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error('Camera is not supported in this browser.');
+  }
+
+  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  localVideo.srcObject = localStream;
+  applyTrackStates();
+  await setupPeerConnection();
+}
+
+function endVideoCall() {
+  clearInterval(callTimerId);
+  callTimerId = null;
   callSeconds = 0;
   callTimer.textContent = '00:00';
-  clearInterval(callTimerId);
-  callTimerId = setInterval(updateCallTimer, 1000);
-});
+  stopStreamTracks(localStream);
+  localStream = null;
+  localVideo.srcObject = null;
+  closePeerConnections();
+}
 
-endCall.addEventListener('click', () => {
+function resetCallState() {
   setCallButtons(false);
   callStatus.textContent = 'Idle';
   callStatus.className = 'status-pill idle';
+  callSync.textContent = 'Two-device ready (WebRTC hook)';
+  localOnline.textContent = 'Offline';
   remoteOnline.textContent = 'Waiting';
-  clearInterval(callTimerId);
   muted = false;
   videoOff = false;
   muteBtn.textContent = 'Mute';
   videoBtn.textContent = 'Video Off';
+}
+
+startCall.addEventListener('click', async () => {
+  if (startCall.disabled) return;
+  startCall.disabled = true;
+  try {
+    muted = false;
+    videoOff = false;
+    muteBtn.textContent = 'Mute';
+    videoBtn.textContent = 'Video Off';
+    await startVideoCall();
+    setCallButtons(true);
+    callStatus.textContent = 'In Call';
+    callStatus.className = 'status-pill busy';
+    callSync.textContent = 'Peer connected (local WebRTC loopback)';
+    localOnline.textContent = 'Online';
+    remoteOnline.textContent = 'Connected';
+    callSeconds = 0;
+    callTimer.textContent = '00:00';
+    clearInterval(callTimerId);
+    callTimerId = setInterval(updateCallTimer, 1000);
+  } catch (error) {
+    endVideoCall();
+    resetCallState();
+    callStatus.textContent = 'Camera Error';
+    callSync.textContent = error.message || 'Unable to access camera/microphone.';
+  } finally {
+    setCallButtons(Boolean(localStream));
+  }
+});
+
+endCall.addEventListener('click', () => {
+  endVideoCall();
+  resetCallState();
 });
 
 muteBtn.addEventListener('click', () => {
+  if (!localStream) return;
   muted = !muted;
+  applyTrackStates();
   muteBtn.textContent = muted ? 'Unmute' : 'Mute';
 });
 
 videoBtn.addEventListener('click', () => {
+  if (!localStream) return;
   videoOff = !videoOff;
+  applyTrackStates();
   videoBtn.textContent = videoOff ? 'Video On' : 'Video Off';
 });
 
 addMessage(friendHistory, 'Friend', 'Hey! Ready for a quick chat?', false, '• delivered');
-setCallButtons(false);
+resetCallState();
 
 fetch('/api/history')
   .then((response) => response.json())
@@ -176,3 +296,5 @@ fetch('/api/history')
   .catch(() => {
     addMessage(aiHistory, 'AI', 'Hi! Ask your question and I will respond in real time.');
   });
+
+window.addEventListener('beforeunload', endVideoCall);

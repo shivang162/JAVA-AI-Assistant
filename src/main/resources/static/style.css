@@ -168,12 +168,11 @@ body {
   overflow: hidden;
   background: #0f172a;
 }
-.video-placeholder {
+.video-frame {
+  width: 100%;
   min-height: 210px;
-  display: grid;
-  place-items: center;
-  color: #cbd5e1;
-  font-weight: 600;
+  display: block;
+  object-fit: cover;
   background: linear-gradient(135deg, #334155, #1e293b);
 }
 .video-meta { padding: .7rem; display: flex; justify-content: space-between; }

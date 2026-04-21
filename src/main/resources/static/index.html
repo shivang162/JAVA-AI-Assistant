@@ -44,14 +44,14 @@
 
         <div class="video-grid">
           <article class="video-card">
-            <div class="video-placeholder">You</div>
+            <video id="local-video" class="video-frame" autoplay muted playsinline></video>
             <div class="video-meta">
               <strong>This Device</strong>
-              <small id="local-online">Online</small>
+              <small id="local-online">Offline</small>
             </div>
           </article>
           <article class="video-card">
-            <div class="video-placeholder">Friend</div>
+            <video id="remote-video" class="video-frame" autoplay playsinline></video>
             <div class="video-meta">
               <strong>Friend Device</strong>
               <small id="remote-online">Waiting</small>
@@ -61,7 +61,7 @@
 
         <div class="call-meta">
           <span>Call Duration: <strong id="call-timer">00:00</strong></span>
-          <span>Sync: <strong>Two-device ready (WebRTC hook)</strong></span>
+          <span>Sync: <strong id="call-sync">Two-device ready (WebRTC hook)</strong></span>
         </div>
 
         <div class="controls">
