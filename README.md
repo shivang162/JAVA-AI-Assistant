@@ -1,7 +1,7 @@
-# ☕ Java AI Assistant
+# ☕ Java Editor Pro
 
-A Java Swing desktop application that combines a **Java code editor** with an
-**AI-powered chat assistant** – both tightly focused on the Java language.
+A Java Swing desktop IDE focused on **Java-only editing, compiling, and running**
+with integrated **AI assistance** and collaboration integration panels.
 
 ---
 
@@ -9,11 +9,12 @@ A Java Swing desktop application that combines a **Java code editor** with an
 
 | Feature | Details |
 |---|---|
-| **Java Code Editor** | Syntax-highlighted `JTextPane` (keywords, strings, comments, annotations, numbers) with line numbers |
-| **Compile** | One-click compilation via `javax.tools.JavaCompiler` – errors displayed inline; code is never executed |
+| **Java Code Editor** | Multi-tab Java editor with syntax highlighting, line numbers, find/replace (regex), and autosave |
+| **Compile + Run** | Compile and run Java programs via `javax.tools.JavaCompiler` + `ProcessBuilder`, with terminal output |
 | **AI Chat** | OpenAI GPT chat assistant constrained to Java topics only |
 | **Ask AI** | Send selected (or all) editor code directly to the AI for review / explanation |
-| **Dark theme** | VS Code–inspired dark palette throughout |
+| **Themes** | Dark/light mode toggle |
+| **IDE panels** | Right-side tabs for AI, Team Chat, Collaboration, and Video integration points |
 
 ---
 
@@ -73,6 +74,8 @@ java -jar target/java-ai-assistant.jar
 
 * Write Java code in the editor.
 * Press **Ctrl+B** or click **▶ Compile** to compile.
+* Press **Ctrl+R** or click **▶ Run** to compile + execute.
+* Use menu options for **New/Open/Save/Save As** and **Find & Replace**.
 * Compilation output (errors / success) appears in the **Compiler Output** panel at the bottom.
 * Click **🤖 Ask AI** to send the selected code (or all code) to the chat assistant for review.
 
@@ -88,8 +91,10 @@ java -jar target/java-ai-assistant.jar
 | Shortcut | Action |
 |---|---|
 | `Ctrl+B` | Compile the Java code |
-| `Ctrl+Enter` | Send chat message |
+| `Ctrl+R` | Compile and run current Java tab |
+| `Ctrl+Enter` | Send AI chat message |
 | `F5` | Toggle compiler output panel |
+| `Ctrl+T` | Toggle dark/light theme |
 | `Ctrl+Q` (macOS: `⌘Q`) | Exit |
 
 ---

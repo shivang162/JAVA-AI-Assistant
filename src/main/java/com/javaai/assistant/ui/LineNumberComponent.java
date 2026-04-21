@@ -15,8 +15,10 @@ import java.awt.geom.Rectangle2D;
  */
 public class LineNumberComponent extends JComponent {
 
-    private static final Color BG_COLOR   = new Color(40, 40, 40);
-    private static final Color FG_COLOR   = new Color(100, 100, 100);
+    private static final Color BG_COLOR_DARK   = new Color(40, 40, 40);
+    private static final Color FG_COLOR_DARK   = new Color(100, 100, 100);
+    private static final Color BG_COLOR_LIGHT  = new Color(240, 240, 240);
+    private static final Color FG_COLOR_LIGHT  = new Color(120, 120, 120);
     private static final Font  LINE_FONT  = new Font("Monospaced", Font.PLAIN, 13);
     private static final int   PADDING    = 6;
     private static final int   MIN_DIGITS = 3; // always wide enough for 999 lines
@@ -27,9 +29,14 @@ public class LineNumberComponent extends JComponent {
         this.textPane = textPane;
         setFont(LINE_FONT);
         setPreferredSize(computePreferredSize());
-        setBackground(BG_COLOR);
-        setForeground(FG_COLOR);
+        setBackground(BG_COLOR_DARK);
+        setForeground(FG_COLOR_DARK);
         setOpaque(true);
+    }
+
+    public void applyTheme(boolean dark) {
+        setBackground(dark ? BG_COLOR_DARK : BG_COLOR_LIGHT);
+        setForeground(dark ? FG_COLOR_DARK : FG_COLOR_LIGHT);
     }
 
     /** Call when the number of lines may have changed so width is recalculated. */
@@ -46,9 +53,9 @@ public class LineNumberComponent extends JComponent {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2.setColor(BG_COLOR);
+        g2.setColor(getBackground());
         g2.fillRect(0, 0, getWidth(), getHeight());
-        g2.setColor(FG_COLOR);
+        g2.setColor(getForeground());
         g2.setFont(LINE_FONT);
 
         FontMetrics fm = g2.getFontMetrics();
