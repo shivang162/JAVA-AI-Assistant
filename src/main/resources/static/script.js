@@ -23,6 +23,19 @@ let callTimerId = null;
 let muted = false;
 let videoOff = false;
 
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.response || 'Request failed');
+  }
+  return data;
+}
+
 function getCurrentTimeString() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -63,7 +76,7 @@ tabs.forEach((btn) => {
   btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
 });
 
-aiForm.addEventListener('submit', (event) => {
+aiForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const question = aiInput.value.trim();
   if (!question) return;
@@ -72,14 +85,19 @@ aiForm.addEventListener('submit', (event) => {
   aiInput.value = '';
   aiLoading.classList.remove('hidden');
 
-  setTimeout(() => {
+  try {
+    if (question.startsWith('/')) {
+      const result = await postJson('/api/command', { command: question });
+      addMessage(aiHistory, 'AI', result.response);
+    } else {
+      const result = await postJson('/api/chat', { message: question });
+      addMessage(aiHistory, 'AI', result.response);
+    }
+  } catch (error) {
+    addMessage(aiHistory, 'AI', `Error: ${error.message}`);
+  } finally {
     aiLoading.classList.add('hidden');
-    addMessage(
-      aiHistory,
-      'AI',
-      `I received your question: "${question}". Connect this UI with your backend WebSocket/AI API for real-time answers across devices.`
-    );
-  }, 1200);
+  }
 });
 
 friendForm.addEventListener('submit', (event) => {
@@ -140,6 +158,21 @@ videoBtn.addEventListener('click', () => {
   videoBtn.textContent = videoOff ? 'Video On' : 'Video Off';
 });
 
-addMessage(aiHistory, 'AI', 'Hi! Ask your question and I will respond in real time.');
 addMessage(friendHistory, 'Friend', 'Hey! Ready for a quick chat?', false, '• delivered');
 setCallButtons(false);
+
+fetch('/api/history')
+  .then((response) => response.json())
+  .then((history) => {
+    if (!Array.isArray(history) || history.length === 0) {
+      addMessage(aiHistory, 'AI', 'Hi! Ask your question and I will respond in real time.');
+      return;
+    }
+    history.forEach((message) => {
+      const isUser = message.role === 'user';
+      addMessage(aiHistory, isUser ? 'You' : 'AI', message.content, isUser);
+    });
+  })
+  .catch(() => {
+    addMessage(aiHistory, 'AI', 'Hi! Ask your question and I will respond in real time.');
+  });
