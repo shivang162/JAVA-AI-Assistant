@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Assistant Real-Time Suite</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <h1>AI Assistant Real-Time Suite</h1>
+      <p>AI doubts support, video calls, and live friend chat</p>
+    </header>
+
+    <nav class="feature-nav" aria-label="Primary">
+      <button class="nav-btn active" data-tab="assistant">AI Assistant</button>
+      <button class="nav-btn" data-tab="video">Video Call</button>
+      <button class="nav-btn" data-tab="friends-chat">Friends Chat</button>
+    </nav>
+
+    <main>
+      <section id="assistant" class="tab-panel active">
+        <div class="panel-header">
+          <h2>AI Assistant Chat</h2>
+          <span class="status-pill live">Live</span>
+        </div>
+        <div id="ai-history" class="message-history" aria-live="polite"></div>
+        <div id="ai-loading" class="loading-row hidden">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <small>AI is thinking...</small>
+        </div>
+        <form id="ai-form" class="composer">
+          <input id="ai-input" type="text" placeholder="Ask any doubt..." required />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <section id="video" class="tab-panel">
+        <div class="panel-header">
+          <h2>Video Conference</h2>
+          <span id="call-status" class="status-pill idle">Idle</span>
+        </div>
+
+        <div class="video-grid">
+          <article class="video-card">
+            <div class="video-placeholder">You</div>
+            <div class="video-meta">
+              <strong>This Device</strong>
+              <small id="local-online">Online</small>
+            </div>
+          </article>
+          <article class="video-card">
+            <div class="video-placeholder">Friend</div>
+            <div class="video-meta">
+              <strong>Friend Device</strong>
+              <small id="remote-online">Waiting</small>
+            </div>
+          </article>
+        </div>
+
+        <div class="call-meta">
+          <span>Call Duration: <strong id="call-timer">00:00</strong></span>
+          <span>Sync: <strong>Two-device ready (WebRTC hook)</strong></span>
+        </div>
+
+        <div class="controls">
+          <button id="start-call" class="success">Start Call</button>
+          <button id="end-call" class="danger" disabled>End Call</button>
+          <button id="mute-btn" disabled>Mute</button>
+          <button id="video-btn" disabled>Video Off</button>
+        </div>
+      </section>
+
+      <section id="friends-chat" class="tab-panel">
+        <div class="panel-header">
+          <h2>Real-Time Friends Chat</h2>
+          <span class="status-pill live">Connected</span>
+        </div>
+
+        <div class="participants">
+          <div class="person online"><span class="avatar">Y</span><span>You</span></div>
+          <div class="person online"><span class="avatar">F</span><span>Friend</span></div>
+        </div>
+
+        <div id="friend-history" class="message-history" aria-live="polite"></div>
+
+        <form id="friend-form" class="composer">
+          <input id="friend-input" type="text" placeholder="Type a message..." required />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
