@@ -1,0 +1,61 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "mvn: clean package",
+            "type": "shell",
+            "command": "mvn clean package -q",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$javac"
+        },
+        {
+            "label": "mvn: clean compile",
+            "type": "shell",
+            "command": "mvn clean compile -q",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$javac"
+        },
+        {
+            "label": "mvn: clean",
+            "type": "shell",
+            "command": "mvn clean -q",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run JAR",
+            "type": "shell",
+            "command": "java -jar target/java-ai-assistant.jar",
+            "group": "test",
+            "dependsOn": "mvn: clean package",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
