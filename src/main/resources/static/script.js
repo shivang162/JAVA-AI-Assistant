@@ -42,6 +42,9 @@ let localPeerConnection = null;
 let remotePeerConnection = null;
 let activeVideoSessionId = '';
 let activeGroupId = '';
+let groupSocket = null;
+let groupSocketReconnectDelayId = null;
+let groupSocketRetries = 0;
 
 const deviceNameById = new Map();
 const storedDeviceId = (() => {
@@ -285,6 +288,54 @@ function resetCallState() {
   videoBtn.textContent = 'Video Off';
 }
 
+function scheduleGroupSocketReconnect() {
+  if (groupSocketReconnectDelayId) return;
+  const waitMs = Math.min(1000 * (2 ** groupSocketRetries), 10000);
+  groupSocketRetries += 1;
+  groupSocketReconnectDelayId = setTimeout(() => {
+    groupSocketReconnectDelayId = null;
+    connectGroupSocket();
+  }, waitMs);
+}
+
+function connectGroupSocket() {
+  if (groupSocket && (groupSocket.readyState === WebSocket.OPEN || groupSocket.readyState === WebSocket.CONNECTING)) {
+    return;
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${window.location.host}/ws/group-chat`;
+  try {
+    groupSocket = new WebSocket(wsUrl);
+  } catch (error) {
+    scheduleGroupSocketReconnect();
+    return;
+  }
+
+  groupSocket.addEventListener('open', () => {
+    groupSocketRetries = 0;
+  });
+
+  groupSocket.addEventListener('message', (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      if (payload?.type !== 'group-message') return;
+      if (!activeGroupId || payload.groupId !== activeGroupId) return;
+      if (payload?.message?.senderDeviceId === currentDeviceId) return;
+      const displayName = deviceNameById.get(payload.message.senderDeviceId) || payload.message.senderDeviceId;
+      addMessage(friendHistory, displayName, payload.message.content, false, 'live');
+    } catch (error) {
+      console.error('WebSocket parse error:', error);
+    }
+  });
+
+  groupSocket.addEventListener('close', scheduleGroupSocketReconnect);
+  groupSocket.addEventListener('error', () => {
+    if (groupSocket?.readyState !== WebSocket.OPEN) {
+      scheduleGroupSocketReconnect();
+    }
+  });
+}
+
 tabs.forEach((btn) => {
   btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
 });
@@ -469,6 +520,7 @@ friendForm.addEventListener('submit', async (event) => {
 
 resetCallState();
 addMessage(friendHistory, 'System', 'Create or join a group chat to start messaging.');
+connectGroupSocket();
 
 fetch('/api/history')
   .then((response) => response.json())
@@ -487,3 +539,11 @@ fetch('/api/history')
   });
 
 window.addEventListener('beforeunload', endVideoCall);
+window.addEventListener('beforeunload', () => {
+  if (groupSocketReconnectDelayId) {
+    clearTimeout(groupSocketReconnectDelayId);
+  }
+  if (groupSocket && groupSocket.readyState === WebSocket.OPEN) {
+    groupSocket.close();
+  }
+});
