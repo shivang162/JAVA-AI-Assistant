@@ -36,6 +36,18 @@ class ChatControllerTest {
     }
 
     @Test
+    void historyEndpointReturnsPersistedMessages() throws Exception {
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"persist me\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.role == 'user' && @.content == 'persist me')]").exists());
+    }
+
+    @Test
     void commandEndpointHandlesHelp() throws Exception {
         mockMvc.perform(post("/api/command")
                         .contentType(MediaType.APPLICATION_JSON)

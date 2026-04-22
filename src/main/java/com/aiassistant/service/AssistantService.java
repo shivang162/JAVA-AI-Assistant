@@ -5,6 +5,7 @@ import com.aiassistant.command.CommandResult;
 import com.aiassistant.config.AssistantConfig;
 import com.aiassistant.conversation.ConversationManager;
 import com.aiassistant.conversation.Message;
+import com.aiassistant.persistence.repository.ConversationMessageRepository;
 import com.aiassistant.nlp.IntentAnalysis;
 import com.aiassistant.nlp.NlpEngine;
 import com.aiassistant.response.ResponseGenerator;
@@ -19,9 +20,9 @@ public class AssistantService {
     private final ResponseGenerator responseGenerator;
     private final CommandHandler commandHandler;
 
-    public AssistantService() {
+    public AssistantService(ConversationMessageRepository conversationMessageRepository) {
         AssistantConfig config = new AssistantConfig();
-        this.conversationManager = new ConversationManager(config.getContextWindow());
+        this.conversationManager = new ConversationManager(config.getContextWindow(), conversationMessageRepository);
         this.nlpEngine = new NlpEngine(config.getIntentKeywords());
         this.responseGenerator = new ResponseGenerator(config);
         this.commandHandler = new CommandHandler(config, conversationManager);
