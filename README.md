@@ -21,10 +21,12 @@ src/main/resources/
 │   ├── index.html
 │   ├── style.css
 │   └── script.js
+├── application.properties
 ├── ai.properties
 ├── commands.properties
 ├── intents.properties
-└── logging.properties
+├── logging.properties
+└── schema.sql
 ```
 
 ## Build & Run
@@ -59,6 +61,8 @@ ai.temperature=0.7
 ai.maxTokens=256
 ai.contextWindow=20
 ```
+
+SQLite + JPA settings are in `src/main/resources/application.properties`.
 
 ## Example Usage
 
