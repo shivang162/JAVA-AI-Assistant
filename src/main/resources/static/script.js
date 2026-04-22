@@ -43,13 +43,36 @@ let remotePeerConnection = null;
 let activeVideoSessionId = '';
 let activeGroupId = '';
 
-const currentDeviceId = `device-${Math.random().toString(36).slice(2, 10)}`;
+const deviceNameById = new Map();
+const storedDeviceId = (() => {
+  try {
+    return localStorage.getItem('assistant-device-id');
+  } catch {
+    return null;
+  }
+})();
+const generatedDeviceId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+  ? crypto.randomUUID()
+  : `device-${Math.random().toString(36).slice(2, 10)}`;
+const currentDeviceId = storedDeviceId || generatedDeviceId;
+if (!storedDeviceId) {
+  try {
+    localStorage.setItem('assistant-device-id', currentDeviceId);
+  } catch {
+    // no-op: storage can be unavailable in private/restricted contexts
+  }
+}
 const currentDeviceName = `Browser-${currentDeviceId.slice(-4)}`;
 const currentDeviceType = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
-  const data = await response.json().catch(() => ({}));
+  let data = {};
+  try {
+    data = await response.json();
+  } catch (error) {
+    console.error('Response JSON parse failed:', error);
+  }
   if (!response.ok) {
     throw new Error(data.error || data.response || 'Request failed');
   }
@@ -105,6 +128,10 @@ function renderDevices(devices) {
     deviceList.innerHTML = '<small class="muted-text">No active devices</small>';
     return;
   }
+  deviceNameById.clear();
+  devices.forEach((device) => {
+    deviceNameById.set(device.deviceId, device.name);
+  });
   deviceList.innerHTML = devices
     .map((device) => (
       `<div class="device-item"><strong>${device.name}</strong> · ${device.type} · ${device.deviceId}</div>`
@@ -121,8 +148,7 @@ async function registerCurrentDevice() {
   const device = await postJson('/api/device/register', {
     deviceId: currentDeviceId,
     name: currentDeviceName,
-    type: currentDeviceType,
-    ipAddress: location.hostname || '127.0.0.1'
+    type: currentDeviceType
   });
   currentDeviceLabel.textContent = `${device.name} (${device.deviceId})`;
   return device;
@@ -236,7 +262,8 @@ function renderGroupMessages(messages) {
   }
   messages.forEach((message) => {
     const outgoing = message.senderDeviceId === currentDeviceId;
-    addMessage(friendHistory, outgoing ? 'You' : message.senderDeviceId, message.content, outgoing);
+    const displayName = outgoing ? 'You' : (deviceNameById.get(message.senderDeviceId) || message.senderDeviceId);
+    addMessage(friendHistory, displayName, message.content, outgoing);
   });
 }
 
@@ -263,11 +290,20 @@ tabs.forEach((btn) => {
 });
 
 refreshDevicesBtn.addEventListener('click', () => {
-  refreshDevices().catch((error) => {
-    renderDevices([]);
-    currentDeviceLabel.textContent = `Failed to refresh devices: ${error.message}`;
-  });
+  registerCurrentDevice()
+    .then(refreshDevices)
+    .catch((error) => {
+      renderDevices([]);
+      currentDeviceLabel.textContent = `Device registration failed: ${error.message}`;
+    });
 });
+
+registerCurrentDevice()
+  .then(refreshDevices)
+  .catch((error) => {
+    currentDeviceLabel.textContent = `Registration failed: ${error.message} (click Refresh to retry)`;
+    renderDevices([]);
+  });
 
 aiForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -448,13 +484,6 @@ fetch('/api/history')
   })
   .catch(() => {
     addMessage(aiHistory, 'AI', 'Hi! Ask your question and I will respond in real time.');
-  });
-
-registerCurrentDevice()
-  .then(refreshDevices)
-  .catch((error) => {
-    currentDeviceLabel.textContent = `Registration failed: ${error.message}`;
-    renderDevices([]);
   });
 
 window.addEventListener('beforeunload', endVideoCall);

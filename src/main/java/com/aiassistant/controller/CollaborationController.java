@@ -3,6 +3,7 @@ package com.aiassistant.controller;
 import com.aiassistant.service.DeviceManager;
 import com.aiassistant.service.GroupChatManager;
 import com.aiassistant.service.VideoSessionManager;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,13 +34,17 @@ public class CollaborationController {
     }
 
     @PostMapping("/device/register")
-    public ResponseEntity<?> registerDevice(@RequestBody DeviceRegistrationRequest request) {
+    public ResponseEntity<?> registerDevice(@RequestBody DeviceRegistrationRequest request, HttpServletRequest servletRequest) {
         try {
+            String ipAddress = request == null ? null : request.ipAddress();
+            if (ipAddress == null || ipAddress.isBlank()) {
+                ipAddress = servletRequest == null ? null : servletRequest.getRemoteAddr();
+            }
             return ResponseEntity.ok(deviceManager.register(
                     request == null ? null : request.deviceId(),
                     request == null ? null : request.name(),
                     request == null ? null : request.type(),
-                    request == null ? null : request.ipAddress()
+                    ipAddress
             ));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
