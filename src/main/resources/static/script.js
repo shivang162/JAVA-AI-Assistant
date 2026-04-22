@@ -290,8 +290,9 @@ function resetCallState() {
 
 function scheduleGroupSocketReconnect() {
   if (groupSocketReconnectDelayId) return;
-  const waitMs = Math.min(1000 * (2 ** groupSocketRetries), 10000);
-  groupSocketRetries += 1;
+  const cappedRetries = Math.min(groupSocketRetries, 5);
+  const waitMs = Math.min(1000 * (2 ** cappedRetries), 10000);
+  groupSocketRetries = Math.min(groupSocketRetries + 1, 5);
   groupSocketReconnectDelayId = setTimeout(() => {
     groupSocketReconnectDelayId = null;
     connectGroupSocket();
@@ -324,7 +325,7 @@ function connectGroupSocket() {
       const displayName = deviceNameById.get(payload.message.senderDeviceId) || payload.message.senderDeviceId;
       addMessage(friendHistory, displayName, payload.message.content, false, 'live');
     } catch (error) {
-      console.error('WebSocket parse error:', error);
+      console.error(`Failed to parse WebSocket message: ${error?.message || 'unknown error'}`, event.data);
     }
   });
 

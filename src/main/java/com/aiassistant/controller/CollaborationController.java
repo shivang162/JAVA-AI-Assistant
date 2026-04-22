@@ -8,6 +8,8 @@ import com.aiassistant.websocket.GroupChatWebSocketHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +25,7 @@ import java.util.NoSuchElementException;
 @RestController
 @RequestMapping("/api")
 public class CollaborationController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CollaborationController.class);
     private final DeviceManager deviceManager;
     private final VideoSessionManager videoSessionManager;
     private final GroupChatManager groupChatManager;
@@ -211,7 +214,8 @@ public class CollaborationController {
             groupChatWebSocketHandler.broadcast(objectMapper.writeValueAsString(
                     new GroupMessageEvent("group-message", groupId, message)
             ));
-        } catch (JsonProcessingException ignored) {
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Failed to serialize websocket group message for groupId={}", groupId, exception);
         }
     }
 
