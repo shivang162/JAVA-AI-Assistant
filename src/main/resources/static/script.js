@@ -47,6 +47,14 @@ const deviceNameById = new Map();
 let activeTabId = 'assistant';
 let unreadChatCount = 0;
 
+const connectDeviceBanner = document.getElementById('connect-device-banner');
+const connectBannerUrl = document.getElementById('connect-banner-url');
+const connectQrCanvas = document.getElementById('connect-qr');
+
+function devicePeerId(deviceId) {
+  return `peer-${deviceId.replace(/[^a-zA-Z0-9-]/g, '')}`;
+}
+
 let callSeconds = 0;
 let callTimerId = null;
 let muted = false;
@@ -343,7 +351,7 @@ function postJson(url, payload) {
 
 function renderDevices(devices) {
   if (!Array.isArray(devices) || devices.length === 0) {
-    deviceList.innerHTML = '<small class="muted-text">No active devices</small>';
+    deviceList.innerHTML = '<small class="muted-text">No active devices — open the app on another device to see it here</small>';
     return;
   }
   deviceNameById.clear();
@@ -351,8 +359,58 @@ function renderDevices(devices) {
     deviceNameById.set(device.deviceId, device.name);
   });
   deviceList.innerHTML = devices
-    .map((device) => (`<div class="device-item"><strong>${device.name}</strong> · ${device.type} · ${device.deviceId}</div>`))
-    .join('');
+    .filter((device) => currentDeviceId == null || device.deviceId !== currentDeviceId)
+    .map((device) => {
+      const peerId = devicePeerId(device.deviceId);
+      return (
+        `<div class="device-item">` +
+          `<div><strong>${device.name}</strong> · <span class="device-type">${device.type}</span></div>` +
+          `<div class="device-actions">` +
+            `<button class="device-call-btn" data-peer-id="${peerId}" type="button">📞 Call</button>` +
+            `<button class="device-chat-btn" data-peer-id="${peerId}" type="button">💬 Chat</button>` +
+          `</div>` +
+        `</div>`
+      );
+    })
+    .join('') || '<small class="muted-text">No other active devices yet</small>';
+
+  deviceList.querySelectorAll('.device-call-btn').forEach((btn) => {
+    btn.addEventListener('click', () => quickCallDevice(btn.dataset.peerId));
+  });
+  deviceList.querySelectorAll('.device-chat-btn').forEach((btn) => {
+    btn.addEventListener('click', () => quickChatDevice(btn.dataset.peerId));
+  });
+}
+
+async function quickCallDevice(peerId) {
+  remotePeerIdInput.value = peerId;
+  setActiveTab('video');
+  if (!localStream) {
+    try {
+      await ensureLocalMedia();
+      callStatus.textContent = 'Ready';
+      callStatus.className = 'status-pill live';
+    } catch (err) {
+      callSync.textContent = err.message || 'Unable to open camera/mic';
+      return;
+    }
+  }
+  try {
+    await placeCall(peerId);
+  } catch (err) {
+    callSync.textContent = err.message || 'Unable to start call';
+    setCallButtons(false);
+  }
+}
+
+function quickChatDevice(peerId) {
+  chatRemotePeerIdInput.value = peerId;
+  setActiveTab('friends-chat');
+  if (!peer?.open) {
+    addMessage(friendHistory, 'System', 'Peer connection is not ready yet. Try again in a moment.');
+    return;
+  }
+  setupDataConnection(peer.connect(peerId, { reliable: true }));
 }
 
 async function refreshDevices() {
@@ -603,6 +661,64 @@ registerCurrentDevice()
     currentDeviceLabel.textContent = `Registration failed: ${error.message} (click Refresh to retry)`;
     renderDevices([]);
   });
+
+async function initServerInfo() {
+  try {
+    const info = await fetchJson('/api/server-info');
+    if (info.url && info.ip && info.ip !== 'localhost' && info.ip !== '127.0.0.1') {
+      connectBannerUrl.textContent = info.url;
+      connectDeviceBanner.classList.remove('hidden');
+      if (typeof window.QRCode !== 'undefined') {
+        window.QRCode.toCanvas(connectQrCanvas, info.url, { width: 128, margin: 1 }, (err) => {
+          if (err) connectQrCanvas.style.display = 'none';
+        });
+      }
+    }
+  } catch {
+    // server-info is best-effort
+  }
+}
+
+function initDeviceWebSocket() {
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws/group-chat`;
+  let ws;
+  let reconnectTimer = null;
+
+  function connect() {
+    ws = new WebSocket(wsUrl);
+    ws.addEventListener('message', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload?.type === 'device-registered') {
+          refreshDevices().catch((err) => console.warn('Failed to refresh devices:', err));
+        }
+      } catch {
+        // ignore non-JSON frames
+      }
+    });
+    ws.addEventListener('close', () => {
+      if (!reconnectTimer) {
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          connect();
+        }, 5000);
+      }
+    });
+    ws.addEventListener('error', () => {
+      ws.close();
+    });
+  }
+
+  connect();
+}
+
+setInterval(() => {
+  refreshDevices().catch((err) => console.warn('Failed to refresh devices:', err));
+}, 15000);
+
+initServerInfo();
+initDeviceWebSocket();
 
 aiForm.addEventListener('submit', async (event) => {
   event.preventDefault();
