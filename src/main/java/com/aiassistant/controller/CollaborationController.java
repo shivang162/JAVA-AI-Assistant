@@ -1,9 +1,15 @@
 package com.aiassistant.controller;
 
+import com.aiassistant.service.GroupChatManager.GroupMessage;
 import com.aiassistant.service.DeviceManager;
 import com.aiassistant.service.GroupChatManager;
 import com.aiassistant.service.VideoSessionManager;
+import com.aiassistant.websocket.GroupChatWebSocketHandler;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,18 +25,25 @@ import java.util.NoSuchElementException;
 @RestController
 @RequestMapping("/api")
 public class CollaborationController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CollaborationController.class);
     private final DeviceManager deviceManager;
     private final VideoSessionManager videoSessionManager;
     private final GroupChatManager groupChatManager;
+    private final GroupChatWebSocketHandler groupChatWebSocketHandler;
+    private final ObjectMapper objectMapper;
 
     public CollaborationController(
             DeviceManager deviceManager,
             VideoSessionManager videoSessionManager,
-            GroupChatManager groupChatManager
+            GroupChatManager groupChatManager,
+            GroupChatWebSocketHandler groupChatWebSocketHandler,
+            ObjectMapper objectMapper
     ) {
         this.deviceManager = deviceManager;
         this.videoSessionManager = videoSessionManager;
         this.groupChatManager = groupChatManager;
+        this.groupChatWebSocketHandler = groupChatWebSocketHandler;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping("/device/register")
@@ -150,11 +163,13 @@ public class CollaborationController {
     @PostMapping("/group-chat/send")
     public ResponseEntity<?> sendGroupMessage(@RequestBody SendGroupMessageRequest request) {
         try {
-            return ResponseEntity.ok(groupChatManager.sendMessage(
+            GroupMessage savedMessage = groupChatManager.sendMessage(
                     request == null ? null : request.groupId(),
                     request == null ? null : request.deviceId(),
                     request == null ? null : request.message()
-            ));
+            );
+            broadcastGroupMessage(request == null ? null : request.groupId(), savedMessage);
+            return ResponseEntity.ok(savedMessage);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         } catch (NoSuchElementException ex) {
@@ -192,5 +207,18 @@ public class CollaborationController {
     }
 
     public record SendGroupMessageRequest(String groupId, String deviceId, String message) {
+    }
+
+    private void broadcastGroupMessage(String groupId, GroupMessage message) {
+        try {
+            groupChatWebSocketHandler.broadcast(objectMapper.writeValueAsString(
+                    new GroupMessageEvent("group-message", groupId, message)
+            ));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Failed to serialize websocket group message for groupId={}", groupId, exception);
+        }
+    }
+
+    private record GroupMessageEvent(String type, String groupId, GroupMessage message) {
     }
 }

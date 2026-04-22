@@ -10,11 +10,25 @@
   --border: #2b3442;
 }
 
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #edf2f7;
+    --panel: #ffffff;
+    --panel-soft: #f8fafc;
+    --text: #0f172a;
+    --muted: #475569;
+    --primary: #2563eb;
+    --success: #059669;
+    --danger: #dc2626;
+    --border: #d0d9e5;
+  }
+}
+
 * { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: Inter, Segoe UI, Roboto, sans-serif;
-  background: radial-gradient(circle at top, #111b35, var(--bg));
+  background: radial-gradient(circle at top, var(--panel), var(--bg));
   color: var(--text);
 }
 
@@ -51,7 +65,7 @@ body {
 
 .tab-panel {
   display: none;
-  background: rgba(17, 24, 39, .92);
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: .9rem;
   padding: 1rem;
@@ -79,7 +93,7 @@ body {
   border: 1px solid var(--border);
   border-radius: .7rem;
   padding: .7rem;
-  background: #0f172a;
+  background: var(--panel);
 }
 
 .inline-header {
@@ -116,7 +130,7 @@ body {
   min-height: 280px;
   max-height: 430px;
   overflow: auto;
-  background: #0f172a;
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: .7rem;
   padding: .8rem;
@@ -135,7 +149,7 @@ body {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #1e293b;
+  background: var(--panel-soft);
   font-size: .8rem;
 }
 
@@ -157,7 +171,7 @@ body {
 
 .message.self { justify-content: flex-end; }
 .message.self .bubble { background: #1d4ed8; border-color: #1e40af; }
-.message.self .avatar { order: 2; background: #1e40af; }
+.message.self .avatar { order: 2; background: #1e40af; color: #fff; }
 
 .composer {
   margin-top: .8rem;
@@ -170,7 +184,7 @@ body {
   border: 1px solid var(--border);
   border-radius: .6rem;
   padding: .7rem;
-  background: #0f172a;
+  background: var(--panel);
   color: var(--text);
 }
 
@@ -201,7 +215,7 @@ body {
   border: 1px solid var(--border);
   border-radius: .7rem;
   overflow: hidden;
-  background: #0f172a;
+  background: var(--panel);
 }
 .video-frame {
   width: 100%;
