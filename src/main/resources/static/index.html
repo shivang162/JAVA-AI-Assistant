@@ -10,13 +10,16 @@
   <div class="app-shell">
     <header class="topbar">
       <h1>AI Assistant Real-Time Suite</h1>
-      <p>AI questions support, video calls, and multi-device group chat</p>
+      <p>AI support + true P2P video call and P2P chat across two devices</p>
     </header>
 
     <nav class="feature-nav" aria-label="Primary">
       <button class="nav-btn active" data-tab="assistant">AI Assistant</button>
       <button class="nav-btn" data-tab="video">Video Call</button>
-      <button class="nav-btn" data-tab="friends-chat">Group Chat</button>
+      <button class="nav-btn" data-tab="friends-chat">
+        Chat
+        <span id="chat-unread-badge" class="badge hidden" aria-label="Unread chat messages">0</span>
+      </button>
     </nav>
 
     <main>
@@ -38,7 +41,7 @@
 
       <section id="video" class="tab-panel">
         <div class="panel-header">
-          <h2>Video Conference</h2>
+          <h2>Video Call (PeerJS + WebRTC)</h2>
           <span id="call-status" class="status-pill idle">Idle</span>
         </div>
 
@@ -46,6 +49,7 @@
           <div class="panel-box">
             <strong>Current Device</strong>
             <p id="current-device-label" class="muted-text">Registering...</p>
+            <p class="muted-text">My Peer ID: <strong id="my-peer-id">Connecting...</strong></p>
           </div>
           <div class="panel-box">
             <div class="inline-header">
@@ -57,8 +61,8 @@
         </div>
 
         <div class="composer">
-          <input id="video-session-id" type="text" placeholder="Video session ID (auto-generated on start)" />
-          <button id="join-call" type="button">Join Session</button>
+          <input id="remote-peer-id" type="text" placeholder="Friend Peer ID" />
+          <button id="join-call" type="button">Call Friend</button>
         </div>
 
         <div class="video-grid">
@@ -80,43 +84,61 @@
 
         <div class="call-meta">
           <span>Call Duration: <strong id="call-timer">00:00</strong></span>
-          <span>Sync: <strong id="call-sync">Two-device ready (WebRTC hook)</strong></span>
+          <span>Mode: <strong id="call-sync">P2P ready</strong></span>
         </div>
 
         <div class="controls">
-          <button id="start-call" class="success">Start New Session</button>
+          <button id="start-call" class="success">Open Camera</button>
           <button id="end-call" class="danger" disabled>End Call</button>
           <button id="mute-btn" disabled>Mute</button>
           <button id="video-btn" disabled>Video Off</button>
+          <button id="screen-share-btn" disabled>Share Screen</button>
         </div>
       </section>
 
       <section id="friends-chat" class="tab-panel">
         <div class="panel-header">
-          <h2>Group Chat</h2>
-          <span class="status-pill live">Connected</span>
+          <h2>Real-time Chat (PeerJS Data Channel)</h2>
+          <span id="chat-status" class="status-pill idle">Disconnected</span>
         </div>
 
         <div class="composer">
-          <input id="group-name-input" type="text" placeholder="Group name" />
-          <button id="create-group-btn" type="button">Create Group</button>
-        </div>
-        <div class="composer">
-          <input id="group-id-input" type="text" placeholder="Group ID" />
-          <button id="join-group-btn" type="button">Join Group</button>
+          <input id="chat-remote-peer-id" type="text" placeholder="Friend Peer ID for chat" />
+          <button id="connect-chat-btn" type="button">Connect Chat</button>
         </div>
 
-        <p class="muted-text">Active Group: <strong id="active-group-label">None</strong></p>
+        <p class="muted-text">Share Code / Output with your connected friend:</p>
+        <div class="share-grid">
+          <textarea id="share-code-editor" class="share-field" placeholder="Paste or write Java code here..."></textarea>
+          <textarea id="share-output-console" class="share-field" placeholder="Paste console output here..."></textarea>
+        </div>
+        <div class="controls">
+          <button id="share-code-btn" type="button">Share Code</button>
+          <button id="share-output-btn" type="button">Share Output</button>
+        </div>
+
         <div id="friend-history" class="message-history" aria-live="polite"></div>
 
         <form id="friend-form" class="composer">
-          <input id="friend-input" type="text" placeholder="Type a group message..." required />
+          <input id="friend-input" type="text" placeholder="Type a P2P message..." required />
           <button type="submit">Send</button>
         </form>
       </section>
     </main>
   </div>
 
+  <section id="incoming-call-popup" class="call-popup hidden" role="dialog" aria-modal="true" aria-labelledby="incoming-call-title">
+    <div class="call-popup-card">
+      <h3 id="incoming-call-title">Incoming Call</h3>
+      <p id="incoming-call-text">Someone is calling you.</p>
+      <div class="controls">
+        <button id="accept-call-btn" class="success" type="button">Accept</button>
+        <button id="reject-call-btn" class="danger" type="button">Reject</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

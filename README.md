@@ -45,9 +45,13 @@ mvn clean package && java -jar target/ai-assistant-1.0.jar
 - Multi-device collaboration APIs:
   - `POST /api/device/register`
   - `GET /api/devices`
-  - `POST /api/video/start`, `POST /api/video/join`, `POST /api/video/end`
-  - `POST /api/group-chat/create`, `POST /api/group-chat/join`, `POST /api/group-chat/send`
-  - `GET /api/group-chat/{groupId}/messages`
+- Browser P2P collaboration features:
+  - Real-time two-device video call via PeerJS + WebRTC
+  - Incoming-call accept/reject popup
+  - Camera/mic toggle and screen sharing
+  - True PeerJS data-channel chat between devices
+  - Share Code and Share Output buttons in chat
+  - Unread chat badge on the Chat tab
 - Browser UI served from `http://localhost:8080`
 - Properties-based configuration and logging setup
 - Production packaging as executable Spring Boot JAR
