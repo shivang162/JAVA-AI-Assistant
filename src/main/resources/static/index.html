@@ -13,6 +13,17 @@
       <p>AI support + true P2P video call and P2P chat across two devices</p>
     </header>
 
+    <div id="connect-device-banner" class="connect-banner hidden">
+      <div class="connect-banner-body">
+        <div>
+          <strong>📱 Connect Another Device</strong>
+          <p id="connect-banner-url" class="connect-url muted-text">Detecting server URL…</p>
+          <small class="muted-text">Open this URL on any device on the same Wi-Fi — no setup needed.</small>
+        </div>
+        <canvas id="connect-qr" class="connect-qr" aria-label="QR code to open the app on another device"></canvas>
+      </div>
+    </div>
+
     <nav class="feature-nav" aria-label="Primary">
       <button class="nav-btn active" data-tab="assistant">AI Assistant</button>
       <button class="nav-btn" data-tab="video">Video Call</button>
@@ -139,6 +150,7 @@
   </section>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://unpkg.com/qrcode@1.5.4/build/qrcode.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

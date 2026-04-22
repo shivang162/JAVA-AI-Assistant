@@ -126,6 +126,56 @@ body {
   padding: .35rem .5rem;
   border: 1px solid var(--border);
   border-radius: .5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+}
+
+.device-type { color: var(--muted); font-size: .85em; }
+
+.device-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+
+.device-call-btn,
+.device-chat-btn {
+  border: 1px solid var(--border);
+  background: var(--panel-soft);
+  color: var(--text);
+  padding: .3rem .6rem;
+  border-radius: .45rem;
+  cursor: pointer;
+  font-size: .82rem;
+  transition: all .2s ease;
+}
+.device-call-btn:hover { border-color: var(--success); }
+.device-chat-btn:hover { border-color: var(--primary); }
+
+.connect-banner {
+  margin-bottom: .9rem;
+  border: 1px solid #1d4ed8;
+  border-radius: .8rem;
+  background: #172554;
+  padding: .8rem 1rem;
+}
+
+.connect-banner-body {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.connect-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: .92rem;
+  margin: .3rem 0 .2rem;
+  color: #93c5fd;
+}
+
+.connect-qr {
+  border-radius: .4rem;
+  display: block;
+  flex-shrink: 0;
 }
 
 .status-pill {

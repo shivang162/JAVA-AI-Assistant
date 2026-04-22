@@ -53,12 +53,14 @@ public class CollaborationController {
             if (ipAddress == null || ipAddress.isBlank()) {
                 ipAddress = servletRequest == null ? null : servletRequest.getRemoteAddr();
             }
-            return ResponseEntity.ok(deviceManager.register(
+            DeviceManager.RegisteredDevice device = deviceManager.register(
                     request == null ? null : request.deviceId(),
                     request == null ? null : request.name(),
                     request == null ? null : request.type(),
                     ipAddress
-            ));
+            );
+            broadcastDeviceRegistered();
+            return ResponseEntity.ok(device);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }
@@ -209,6 +211,16 @@ public class CollaborationController {
     public record SendGroupMessageRequest(String groupId, String deviceId, String message) {
     }
 
+    private void broadcastDeviceRegistered() {
+        try {
+            groupChatWebSocketHandler.broadcast(objectMapper.writeValueAsString(
+                    new DeviceRegisteredEvent("device-registered")
+            ));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Failed to serialize websocket device-registered event", exception);
+        }
+    }
+
     private void broadcastGroupMessage(String groupId, GroupMessage message) {
         try {
             groupChatWebSocketHandler.broadcast(objectMapper.writeValueAsString(
@@ -220,5 +232,8 @@ public class CollaborationController {
     }
 
     private record GroupMessageEvent(String type, String groupId, GroupMessage message) {
+    }
+
+    private record DeviceRegisteredEvent(String type) {
     }
 }
