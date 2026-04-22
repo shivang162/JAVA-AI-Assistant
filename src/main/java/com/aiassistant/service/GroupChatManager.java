@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class GroupChatManager {
+    private static final Set<String> DEVICE_ID_FIELDS = Set.of("deviceId", "creatorDeviceId", "invitedDeviceId");
     private final GroupChatRepository groupChatRepository;
     private final GroupChatMessageRepository groupChatMessageRepository;
 
@@ -39,7 +40,7 @@ public class GroupChatManager {
         if (invitedDeviceIds != null) {
             invitedDeviceIds.stream()
                     .filter(id -> id != null && !id.isBlank())
-                    .map(String::trim)
+                    .map(id -> normalize(id, "invitedDeviceId"))
                     .forEach(memberDeviceIds::add);
         }
         GroupChatEntity group = groupChatRepository.save(new GroupChatEntity(groupId, normalizedName, serializeMembers(memberDeviceIds), Instant.now()));
@@ -117,7 +118,11 @@ public class GroupChatManager {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + " must not be blank.");
         }
-        return value.trim();
+        String normalized = value.trim();
+        if (DEVICE_ID_FIELDS.contains(fieldName) && normalized.contains(",")) {
+            throw new IllegalArgumentException(fieldName + " must not contain commas.");
+        }
+        return normalized;
     }
 
     public record GroupChat(

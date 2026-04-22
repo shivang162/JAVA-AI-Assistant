@@ -12,7 +12,7 @@ import java.util.List;
 /** Maintains bounded assistant conversation history for context-aware responses. */
 public class ConversationManager {
     private final int maxMessages;
-    private final List<Message> history;
+    private final List<Message> history = new ArrayList<>();
     private final ConversationMessageRepository conversationMessageRepository;
 
     public ConversationManager(int maxMessages) {
@@ -22,7 +22,6 @@ public class ConversationManager {
     public ConversationManager(int maxMessages, ConversationMessageRepository conversationMessageRepository) {
         this.maxMessages = Math.max(2, maxMessages);
         this.conversationMessageRepository = conversationMessageRepository;
-        this.history = conversationMessageRepository == null ? new ArrayList<>() : null;
     }
 
     public synchronized void addUserMessage(String content) {

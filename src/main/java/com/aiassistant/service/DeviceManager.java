@@ -26,7 +26,7 @@ public class DeviceManager {
         String normalizedIp = normalize(ipAddress, "ipAddress");
         Instant now = Instant.now();
         userProfileRepository.findById(normalizedDeviceId)
-                .orElseGet(() -> userProfileRepository.save(new UserProfileEntity(normalizedDeviceId, normalizedName, now)));
+                .orElseGet(() -> userProfileRepository.save(new UserProfileEntity(normalizedDeviceId, normalizedDeviceId, now)));
         DeviceInfoEntity saved = deviceInfoRepository.save(new DeviceInfoEntity(
                 normalizedDeviceId,
                 normalizedName,
