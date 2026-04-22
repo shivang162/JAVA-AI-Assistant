@@ -10,13 +10,13 @@
   <div class="app-shell">
     <header class="topbar">
       <h1>AI Assistant Real-Time Suite</h1>
-      <p>AI questions support, video calls, and live friend chat</p>
+      <p>AI questions support, video calls, and multi-device group chat</p>
     </header>
 
     <nav class="feature-nav" aria-label="Primary">
       <button class="nav-btn active" data-tab="assistant">AI Assistant</button>
       <button class="nav-btn" data-tab="video">Video Call</button>
-      <button class="nav-btn" data-tab="friends-chat">Friends Chat</button>
+      <button class="nav-btn" data-tab="friends-chat">Group Chat</button>
     </nav>
 
     <main>
@@ -42,6 +42,25 @@
           <span id="call-status" class="status-pill idle">Idle</span>
         </div>
 
+        <div class="panel-row">
+          <div class="panel-box">
+            <strong>Current Device</strong>
+            <p id="current-device-label" class="muted-text">Registering...</p>
+          </div>
+          <div class="panel-box">
+            <div class="inline-header">
+              <strong>Active Devices</strong>
+              <button id="refresh-devices" type="button">Refresh</button>
+            </div>
+            <div id="device-list" class="device-list"></div>
+          </div>
+        </div>
+
+        <div class="composer">
+          <input id="video-session-id" type="text" placeholder="Video session ID (auto-generated on start)" />
+          <button id="join-call" type="button">Join Session</button>
+        </div>
+
         <div class="video-grid">
           <article class="video-card">
             <video id="local-video" class="video-frame" autoplay muted playsinline></video>
@@ -65,7 +84,7 @@
         </div>
 
         <div class="controls">
-          <button id="start-call" class="success">Start Call</button>
+          <button id="start-call" class="success">Start New Session</button>
           <button id="end-call" class="danger" disabled>End Call</button>
           <button id="mute-btn" disabled>Mute</button>
           <button id="video-btn" disabled>Video Off</button>
@@ -74,19 +93,24 @@
 
       <section id="friends-chat" class="tab-panel">
         <div class="panel-header">
-          <h2>Real-Time Friends Chat</h2>
+          <h2>Group Chat</h2>
           <span class="status-pill live">Connected</span>
         </div>
 
-        <div class="participants">
-          <div class="person online"><span class="avatar">Y</span><span>You</span></div>
-          <div class="person online"><span class="avatar">F</span><span>Friend</span></div>
+        <div class="composer">
+          <input id="group-name-input" type="text" placeholder="Group name" />
+          <button id="create-group-btn" type="button">Create Group</button>
+        </div>
+        <div class="composer">
+          <input id="group-id-input" type="text" placeholder="Group ID" />
+          <button id="join-group-btn" type="button">Join Group</button>
         </div>
 
+        <p class="muted-text">Active Group: <strong id="active-group-label">None</strong></p>
         <div id="friend-history" class="message-history" aria-live="polite"></div>
 
         <form id="friend-form" class="composer">
-          <input id="friend-input" type="text" placeholder="Type a message..." required />
+          <input id="friend-input" type="text" placeholder="Type a group message..." required />
           <button type="submit">Send</button>
         </form>
       </section>

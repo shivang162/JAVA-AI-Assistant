@@ -40,6 +40,12 @@ mvn clean package && java -jar target/ai-assistant-1.0.jar
 - Command system (`/help`, `/history`, `/clear`, `/exit`)
 - Response generator with temperature-driven template variation
 - Spring Boot REST API (`/api/chat`, `/api/command`, `/api/history`, `/api/health`)
+- Multi-device collaboration APIs:
+  - `POST /api/device/register`
+  - `GET /api/devices`
+  - `POST /api/video/start`, `POST /api/video/join`, `POST /api/video/end`
+  - `POST /api/group-chat/create`, `POST /api/group-chat/join`, `POST /api/group-chat/send`
+  - `GET /api/group-chat/{groupId}/messages`
 - Browser UI served from `http://localhost:8080`
 - Properties-based configuration and logging setup
 - Production packaging as executable Spring Boot JAR
