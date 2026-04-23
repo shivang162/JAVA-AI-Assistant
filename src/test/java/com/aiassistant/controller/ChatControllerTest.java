@@ -56,4 +56,15 @@ class ChatControllerTest {
                 .andExpect(jsonPath("$.handled").value(true))
                 .andExpect(jsonPath("$.response").value(org.hamcrest.Matchers.containsString("/help")));
     }
+
+    @Test
+    void serverInfoUsesRequestHostWhenNotLoopback() throws Exception {
+        mockMvc.perform(get("/api/server-info")
+                        .secure(true)
+                        .header("Host", "192.168.1.42:8443"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ip").value("192.168.1.42"))
+                .andExpect(jsonPath("$.port").value("8443"))
+                .andExpect(jsonPath("$.url").value("https://192.168.1.42:8443"));
+    }
 }
