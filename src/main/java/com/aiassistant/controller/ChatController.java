@@ -59,7 +59,7 @@ public class ChatController {
 
     @GetMapping("/server-info")
     public Map<String, String> serverInfo(HttpServletRequest request) {
-        String scheme = request.getScheme();
+        String scheme = request.isSecure() ? "https" : request.getScheme();
         int port = request.getServerPort();
         String host = resolveBestHost(request);
         String url = scheme + "://" + host + (shouldAppendPort(scheme, port) ? ":" + port : "");
@@ -71,10 +71,8 @@ public class ChatController {
     }
 
     private String resolveBestHost(HttpServletRequest request) {
-        String requestHost = request == null ? null : request.getServerName();
-        if (requestHost != null) {
-            requestHost = requestHost.trim();
-        }
+        String requestHost = request.getServerName();
+        requestHost = requestHost == null ? null : requestHost.trim();
         if (requestHost != null && !requestHost.isBlank() && !isLoopbackHost(requestHost)) {
             return requestHost;
         }
