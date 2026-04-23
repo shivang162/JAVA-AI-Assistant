@@ -59,13 +59,36 @@ public class ChatController {
 
     @GetMapping("/server-info")
     public Map<String, String> serverInfo(HttpServletRequest request) {
-        String ip = resolveLocalIpAddress();
+        String scheme = request.isSecure() ? "https" : request.getScheme();
         int port = request.getServerPort();
+        String host = resolveBestHost(request);
+        String url = scheme + "://" + host + (shouldAppendPort(scheme, port) ? ":" + port : "");
         return Map.of(
-                "ip", ip,
+                "ip", host,
                 "port", String.valueOf(port),
-                "url", "http://" + ip + ":" + port
+                "url", url
         );
+    }
+
+    private String resolveBestHost(HttpServletRequest request) {
+        String requestHost = request.getServerName();
+        requestHost = requestHost == null ? null : requestHost.trim();
+        if (requestHost != null && !requestHost.isBlank() && !isLoopbackHost(requestHost)) {
+            return requestHost;
+        }
+        String localIp = resolveLocalIpAddress();
+        if (!isLoopbackHost(localIp)) {
+            return localIp;
+        }
+        return requestHost == null || requestHost.isBlank() ? "localhost" : requestHost;
+    }
+
+    private boolean shouldAppendPort(String scheme, int port) {
+        if (port <= 0) {
+            return false;
+        }
+        return !("http".equalsIgnoreCase(scheme) && port == 80)
+                && !("https".equalsIgnoreCase(scheme) && port == 443);
     }
 
     private String resolveLocalIpAddress() {
@@ -98,6 +121,15 @@ public class ChatController {
     private boolean isPrivateIpv4(String ip) {
         return ip.startsWith("192.168.") || ip.startsWith("10.")
                 || (ip.startsWith("172.") && isInRange172(ip));
+    }
+
+    private boolean isLoopbackHost(String host) {
+        return host == null
+                || host.isBlank()
+                || "localhost".equalsIgnoreCase(host)
+                || "127.0.0.1".equals(host)
+                || "::1".equals(host)
+                || "0:0:0:0:0:0:0:1".equals(host);
     }
 
     private boolean isInRange172(String ip) {

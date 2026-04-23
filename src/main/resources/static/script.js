@@ -349,6 +349,30 @@ function postJson(url, payload) {
   });
 }
 
+function loadExternalScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+async function ensureLibrary(loadedCheck, urls) {
+  if (loadedCheck()) return true;
+  for (const url of urls) {
+    try {
+      await loadExternalScript(url);
+      if (loadedCheck()) return true;
+    } catch {
+      // try next fallback URL
+    }
+  }
+  return loadedCheck();
+}
+
 function renderDevices(devices) {
   if (!Array.isArray(devices) || devices.length === 0) {
     deviceList.innerHTML = '<small class="muted-text">No active devices — open the app on another device to see it here</small>';
@@ -428,8 +452,12 @@ async function registerCurrentDevice() {
   return device;
 }
 
-function initializePeer() {
-  if (typeof window.Peer !== 'function') {
+async function initializePeer() {
+  const peerReady = await ensureLibrary(
+    () => typeof window.Peer === 'function',
+    ['https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js']
+  );
+  if (!peerReady || typeof window.Peer !== 'function') {
     callSync.textContent = 'PeerJS failed to load';
     myPeerIdLabel.textContent = 'Unavailable';
     return;
@@ -665,14 +693,22 @@ registerCurrentDevice()
 async function initServerInfo() {
   try {
     const info = await fetchJson('/api/server-info');
-    if (info.url && info.ip && info.ip !== 'localhost' && info.ip !== '127.0.0.1') {
-      connectBannerUrl.textContent = info.url;
-      connectDeviceBanner.classList.remove('hidden');
-      if (typeof window.QRCode !== 'undefined') {
-        window.QRCode.toCanvas(connectQrCanvas, info.url, { width: 128, margin: 1 }, (err) => {
-          if (err) connectQrCanvas.style.display = 'none';
-        });
-      }
+    if (!info.url) {
+      return;
+    }
+    connectBannerUrl.textContent = info.url;
+    connectDeviceBanner.classList.remove('hidden');
+
+    const qrReady = await ensureLibrary(
+      () => typeof window.QRCode !== 'undefined',
+      ['https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js']
+    );
+    if (qrReady && typeof window.QRCode !== 'undefined') {
+      window.QRCode.toCanvas(connectQrCanvas, info.url, { width: 128, margin: 1 }, (err) => {
+        connectQrCanvas.style.display = err ? 'none' : 'block';
+      });
+    } else {
+      connectQrCanvas.style.display = 'none';
     }
   } catch {
     // server-info is best-effort
@@ -749,7 +785,10 @@ resetCallState();
 setChatStatus(false);
 updateChatUnreadBadge();
 addMessage(friendHistory, 'System', 'Connect to a friend Peer ID to start P2P chat.');
-initializePeer();
+initializePeer().catch(() => {
+  callSync.textContent = 'PeerJS failed to initialize';
+  myPeerIdLabel.textContent = 'Unavailable';
+});
 
 fetch('/api/history')
   .then((response) => response.json())
